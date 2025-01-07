@@ -2,18 +2,15 @@ package com.prac.fileuploader.Service;
 
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
-import com.prac.fileuploader.config.S3Config;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.net.URL;
 import java.util.Date;
 import java.util.UUID;
@@ -52,5 +49,18 @@ public class S3UploaderServiceImpl implements UploaderService{
         expirationDate.setTime(time + 40000);
         URL url = s3Client.generatePresignedUrl(s3BucketName, fileNameS3, expirationDate, HttpMethod.GET);
         return url.toString();
+    }
+
+    @Override
+    public byte[] downloadFile(String s3fileName) {
+        try {
+            S3Object object = s3Client.getObject(s3BucketName, s3fileName);
+            S3ObjectInputStream objectContent = object.getObjectContent();
+            return objectContent.readAllBytes();
+        }
+        catch (Exception ex){
+            System.out.println("File not found !!");
+        }
+        return null;
     }
 }

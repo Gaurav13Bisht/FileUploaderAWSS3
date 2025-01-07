@@ -1,6 +1,8 @@
 package com.prac.fileuploader.Service;
 
+import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
@@ -12,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.net.URL;
+import java.util.Date;
 import java.util.UUID;
 
 @Service
@@ -26,8 +30,8 @@ public class S3UploaderServiceImpl implements UploaderService{
 
     @Override
     public String uploadFile(MultipartFile file) {
-        final String ogFileName = file.getOriginalFilename();
-        final String fileNameS3 = UUID.randomUUID().toString() + "." + ogFileName.split("\\.")[1];
+        final String fileNameOG = file.getOriginalFilename();
+        final String fileNameS3 = UUID.randomUUID().toString() + "." + fileNameOG.split("\\.")[1];
 
         try{
             s3Client.putObject(s3BucketName, fileNameS3, file.getInputStream(), new ObjectMetadata());
@@ -37,6 +41,16 @@ public class S3UploaderServiceImpl implements UploaderService{
             System.out.println("Failed Upload");
         }
 
-        return fileNameS3;
+        return presignedUrl(fileNameS3);
+    }
+
+    @Override
+    public String presignedUrl(String fileNameS3) {
+
+        Date expirationDate = new Date();
+        long time = expirationDate.getTime();
+        expirationDate.setTime(time + 40000);
+        URL url = s3Client.generatePresignedUrl(s3BucketName, fileNameS3, expirationDate, HttpMethod.GET);
+        return url.toString();
     }
 }

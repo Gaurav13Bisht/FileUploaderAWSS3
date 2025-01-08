@@ -33,4 +33,9 @@ public class FileController {
                 .body(new ByteArrayResource(s3UploaderService.downloadFile(s3fileName)));
 
     }
+
+    @GetMapping("/greeting")
+    public ResponseEntity<String> greeting() {
+        return ResponseEntity.ok("Service up and running !!");
+    }
 }
